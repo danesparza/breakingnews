@@ -2,6 +2,35 @@
 
 
 [[projects]]
+  digest = "1:970a8c05c71672161a59196a56dd26f84979c88967313efa7d9d46138ea9807c"
+  name = "github.com/ChimeraCoder/anaconda"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9c68684170b980d5b4c2ed08fae9b530e659904d"
+  version = "v2.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:b454a89d181c037ea6d85e0aa38ae98bb1ab9ccfb47354c0066b330e36d3b05f"
+  name = "github.com/ChimeraCoder/tokenbucket"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "c5a927568de7aad8a58127d80bcd36ca4e71e454"
+
+[[projects]]
+  digest = "1:d92a0c10fb57de8742c33500c2fd96bd202fcafd14cb247d5185578f86b276fb"
+  name = "github.com/aws/aws-lambda-go"
+  packages = [
+    "lambda",
+    "lambda/handlertrace",
+    "lambda/messages",
+    "lambdacontext",
+  ]
+  pruneopts = "UT"
+  revision = "18b606949c45bc923e421d7ea891d6d02a34f7dd"
+  version = "v1.16.0"
+
+[[projects]]
   digest = "1:2e2265f1ae7df7e42c555dc464ae509a2eb2fd6930a05f0b1171ec12f30adbce"
   name = "github.com/aws/aws-sdk-go"
   packages = [
@@ -38,12 +67,44 @@
   version = "v0.9.4"
 
 [[projects]]
+  branch = "master"
+  digest = "1:863cb3d06b96794fd14a54579116b7e704cd8bc395e9d0404a5ad236d3e198b4"
+  name = "github.com/azr/backoff"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "53511d3c733003985b0b76f733df1f4d0095ee6a"
+
+[[projects]]
   digest = "1:50e893a85575fa48dc4982a279e50e2fd8b74e4f7c587860c1e25c77083b8125"
   name = "github.com/cihub/seelog"
   packages = ["."]
   pruneopts = "UT"
   revision = "d2c6e5aa9fbfdd1c624e140287063c7730654115"
   version = "v2.6"
+
+[[projects]]
+  branch = "master"
+  digest = "1:efe7dc6d12119a36c1a617b574e99ac9c5ca8fbff57eb283a60462552b7c782a"
+  name = "github.com/dustin/go-jsonpointer"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ba0abeacc3dcca5b9b20f31509c46794edbc9965"
+
+[[projects]]
+  branch = "master"
+  digest = "1:07263fbfa1c038e890b410f730279aa7adc217180f1c2f78c6dc80b3bbe9e819"
+  name = "github.com/dustin/gojson"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2e71ec9dd5adce3b168cd0dbde03b5cc04951c30"
+
+[[projects]]
+  branch = "master"
+  digest = "1:b5cfd8d62c46082a75974f2f5e167c272f7f7d47c7a21caf49b17a45a558a601"
+  name = "github.com/garyburd/go-oauth"
+  packages = ["oauth"]
+  pruneopts = "UT"
+  revision = "bca2e7f09a178fd36b034107a00e2323bca6a82e"
 
 [[projects]]
   digest = "1:d37c61a335d13bc49b3f90e9e13c8686e4548839b69c58549e727afb2245c454"
@@ -69,9 +130,21 @@
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
+[[projects]]
+  branch = "master"
+  digest = "1:76ee51c3f468493aff39dbacc401e8831fbb765104cbf613b89bef01cf4bad70"
+  name = "golang.org/x/net"
+  packages = ["context"]
+  pruneopts = "UT"
+  revision = "d3edc9973b7eb1fb302b0ff2c62357091cea9a30"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = ["github.com/aws/aws-xray-sdk-go/xray"]
+  input-imports = [
+    "github.com/ChimeraCoder/anaconda",
+    "github.com/aws/aws-lambda-go/lambda",
+    "github.com/aws/aws-xray-sdk-go/xray",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
