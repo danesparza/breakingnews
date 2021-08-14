@@ -8,9 +8,9 @@ import (
 	"github.com/danesparza/breakingnews/data"
 )
 
-func TestTwitter_GetNewsReport_ReturnsValidData(t *testing.T) {
+func TestAnaconda_GetNewsReport_ReturnsValidData(t *testing.T) {
 	//	Arrange
-	service := data.TwitterCNNService{}
+	service := data.AnacondaService{}
 	ctx := context.Background()
 	ctx, seg := xray.BeginSegment(ctx, "unit-test")
 	defer seg.Close(nil)

@@ -30,7 +30,7 @@ func HandleRequest(ctx context.Context, msg Message) (data.NewsReport, error) {
 
 	//	Set the services to call with
 	services := []data.NewsService{
-		data.CNNService{},
+		data.AnacondaService{},
 	}
 
 	//	Call the helper method to get the report:
