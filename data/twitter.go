@@ -110,7 +110,7 @@ func GetTwitterImageUrlFromPage(ctx context.Context, page string) (string, error
 	}
 
 	// Find the meta item with the name 'twitter:image'
-	doc.Find("meta[name='twitter:image']").Each(func(i int, s *goquery.Selection) {
+	doc.Find("meta[property='og:image']").Each(func(i int, s *goquery.Selection) {
 		// For each item found, set the return value
 		retval = s.AttrOr("content", "")
 	})
