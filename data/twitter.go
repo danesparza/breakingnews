@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/aws/aws-xray-sdk-go/xray"
@@ -51,19 +52,30 @@ func (s TwitterCNNService) GetNewsReport(ctx context.Context) (NewsReport, error
 		tweetedTime, err := tweet.CreatedAtTime()
 
 		mediaURL := ""
+		storyURL := ""
+		storyDisplayURL := ""
+		storyText := tweet.Text
 
-		//	If we have an associated url, fetch it and get the image url associated (if one exists):
+		//	If we have an associated link, fetch it and get the image url associated (if one exists):
 		if len(tweet.Entities.Urls) > 0 {
-			mediaURL, _ = GetTwitterImageUrlFromPage(ctx, tweet.Entities.Urls[0].ExpandedURL)
+			storyURL = tweet.Entities.Urls[0].ExpandedURL
+			storyDisplayURL = tweet.Entities.Urls[0].URL
+			mediaURL, _ = GetTwitterImageUrlFromPage(ctx, storyURL)
 		}
 
-		//	If we didn't have an error
+		//	If the story text contains the display link, remove it:
+		storyText = strings.Replace(storyText, storyDisplayURL, "", 1)
+		storyText = strings.TrimSpace(storyText)
+
+		//	If we don't have an error and we have a mediaURL
+		//	...add the story to the collection
 		if err == nil && mediaURL != "" {
 			retval.Items = append(retval.Items, NewsItem{
 				ID:         tweet.ID,
 				CreateTime: tweetedTime.Unix(),
-				Text:       tweet.Text,
-				MediaURL:   mediaURL})
+				Text:       storyText,
+				MediaURL:   mediaURL,
+				StoryURL:   storyURL})
 		}
 	}
 

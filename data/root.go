@@ -18,6 +18,7 @@ type NewsItem struct {
 	CreateTime int64  `json:"createtime"`
 	Text       string `json:"text"`
 	MediaURL   string `json:"mediaurl"`
+	StoryURL   string `json:"storyurl"`
 }
 
 // NewsService is the interface for all services that can fetch news data
