@@ -14,7 +14,7 @@ type NewsReport struct {
 
 // NewsItem represents a single news item
 type NewsItem struct {
-	ID         int64  `json:"id"`
+	ID         string `json:"id"`
 	CreateTime int64  `json:"createtime"`
 	Text       string `json:"text"`
 	MediaURL   string `json:"mediaurl"`
