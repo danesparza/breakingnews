@@ -18,6 +18,7 @@ type NewsItem struct {
 	CreateTime int64  `json:"createtime"`
 	Text       string `json:"text"`
 	MediaURL   string `json:"mediaurl"`
+	MediaData  string `json:"mediadata"`
 	StoryURL   string `json:"storyurl"`
 }
 

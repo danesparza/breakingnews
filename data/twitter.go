@@ -1,9 +1,13 @@
 package data
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/jpeg"
 	"net/http"
 	"os"
 	"strings"
@@ -11,6 +15,9 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/aws/aws-xray-sdk-go/xray"
+	"github.com/muesli/smartcrop"
+	"github.com/muesli/smartcrop/nfnt"
+	log "github.com/sirupsen/logrus"
 )
 
 // TwitterTimelineResponse represents the response to a timeline request
@@ -119,13 +126,24 @@ func (s TwitterCNNService) GetNewsReport(ctx context.Context) (NewsReport, error
 		storyText = strings.TrimSpace(storyText)
 
 		//	If we have a mediaURL
+		//	...fetch the image, encode it, add it to mediadata
 		//	...add the story to the collection
 		if mediaURL != "" {
+
+			mediaData, err := getResizedEncodedImage(mediaURL, 600, 300)
+			if err != nil {
+				log.WithError(err).WithFields(log.Fields{
+					"tweetID":  tweet.ID,
+					"mediaUrl": mediaURL,
+				}).Error("problem getting the encoded mediaData image")
+			}
+
 			retval.Items = append(retval.Items, NewsItem{
 				ID:         tweet.ID,
 				CreateTime: tweet.CreatedAt.Unix(),
 				Text:       storyText,
 				MediaURL:   mediaURL,
+				MediaData:  mediaData,
 				StoryURL:   storyURL})
 		}
 
@@ -183,6 +201,63 @@ func GetTwitterImageUrlFromPage(ctx context.Context, page string) (string, error
 
 	// Close the segment
 	seg.Close(nil)
+
+	return retval, nil
+}
+
+func getResizedEncodedImage(imageUrl string, width, height int) (string, error) {
+
+	//	Our return value
+	retval := ""
+
+	type SubImager interface {
+		SubImage(r image.Rectangle) image.Image
+	}
+
+	//	Open the url and fetch into memory
+	response, err := http.Get(imageUrl)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"url": imageUrl,
+		}).Error("error fetching image url")
+		return retval, fmt.Errorf("error fetching url: %v", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		return retval, fmt.Errorf("expected http 200 status code but got %v instead", response.StatusCode)
+	}
+
+	//	Analyze the image and crop it
+	img, _, err := image.Decode(response.Body)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"url": imageUrl,
+		}).Error("error reading source image")
+		return retval, fmt.Errorf("error reading source image: %v", err)
+	}
+
+	resizer := nfnt.NewDefaultResizer()
+	analyzer := smartcrop.NewAnalyzer(resizer)
+	topCrop, err := analyzer.FindBestCrop(img, width, height)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"url": imageUrl,
+		}).Error("error finding best crop")
+		return retval, fmt.Errorf("error finding best crop: %v", err)
+	}
+
+	img = img.(SubImager).SubImage(topCrop)
+	if img.Bounds().Dx() != width || img.Bounds().Dy() != height {
+		img = resizer.Resize(img, uint(width), uint(height))
+	}
+
+	//	Encode as jpg image data
+	buffer := new(bytes.Buffer)
+	jpeg.Encode(buffer, img, nil)
+
+	//	base64 encode the image data and set the return value
+	retval = fmt.Sprintf("data:image/jpeg;base64,%s", base64.StdEncoding.EncodeToString(buffer.Bytes()))
 
 	return retval, nil
 }
