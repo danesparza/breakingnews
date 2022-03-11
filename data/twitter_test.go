@@ -23,6 +23,8 @@ func TestTwitter_GetNewsReport_ReturnsValidData(t *testing.T) {
 		t.Errorf("Error calling GetNewsReport: %v", err)
 	}
 
-	t.Logf("Returned object: %+v", response)
+	t.Logf("Returned %v items", len(response.Items))
+
+	// t.Logf("Returned object: %+v", response)
 
 }

@@ -106,47 +106,81 @@ func (s TwitterCNNService) GetNewsReport(ctx context.Context) (NewsReport, error
 		return retval, fmt.Errorf("problem decoding the response from the Twitter API server: %v", err)
 	}
 
-	//	Get the tweets with media (photos) and return them
+	//	First ... Get a count of all tweets that have have urls associated with them:
+	tweetsWithUrls := 0
+	for _, tweet := range twResponse.Tweets {
+		if len(tweet.Entities.Urls) > 0 {
+			tweetsWithUrls++
+		}
+	}
+
+	//	Then, for the tweets with media (photos), fetch the associated images and encode them
+	c := make(chan NewsItem)
+	timeout := time.After(25 * time.Second)
+
 	for _, tweet := range twResponse.Tweets {
 
-		mediaURL := ""
-		storyURL := ""
-		storyDisplayURL := ""
-		storyText := tweet.Text
+		//	Following example here ... https://go.dev/talks/2012/concurrency.slide#47
+		//	Start embedded goroutine here?  (and have it return a NewsItem?)
 
-		//	If we have an associated link, fetch it and get the image url associated (if one exists):
-		if len(tweet.Entities.Urls) > 0 {
-			storyURL = tweet.Entities.Urls[0].ExpandedURL
-			storyDisplayURL = tweet.Entities.Urls[0].URL
-			mediaURL, _ = GetTwitterImageUrlFromPage(ctx, storyURL)
-		}
+		go func(ctxPassed context.Context, taskTweet Tweet) {
+			//	Start the service segment
+			ctxtask, _ := xray.BeginSubsegment(ctxPassed, "tweet-fetchtask")
 
-		//	If the story text contains the display link, remove it:
-		storyText = strings.Replace(storyText, storyDisplayURL, "", 1)
-		storyText = strings.TrimSpace(storyText)
+			mediaURL := ""
+			storyURL := ""
+			storyDisplayURL := ""
+			storyText := taskTweet.Text
+			mediaData := ""
 
-		//	If we have a mediaURL
-		//	...fetch the image, encode it, add it to mediadata
-		//	...add the story to the collection
-		if mediaURL != "" {
+			//	If we have an associated link, fetch it and get the image url associated (if one exists):
+			if len(taskTweet.Entities.Urls) > 0 {
+				storyURL = taskTweet.Entities.Urls[0].ExpandedURL
+				storyDisplayURL = taskTweet.Entities.Urls[0].URL
+				mediaURL, _ = GetTwitterImageUrlFromPage(ctxtask, storyURL)
 
-			mediaData, err := getResizedEncodedImage(mediaURL, 600, 300)
-			if err != nil {
-				log.WithError(err).WithFields(log.Fields{
-					"tweetID":  tweet.ID,
-					"mediaUrl": mediaURL,
-				}).Error("problem getting the encoded mediaData image")
+				//	If the story text contains the display link, remove it:
+				storyText = strings.Replace(storyText, storyDisplayURL, "", 1)
+				storyText = strings.TrimSpace(storyText)
+
+				//	If we have a mediaURL
+				//	...fetch the image, encode it, add it to mediadata
+				//	...add the story to the collection
+				if mediaURL != "" {
+
+					response, resizeErr := getResizedEncodedImage(mediaURL, 600, 300)
+					if resizeErr != nil {
+						log.WithError(resizeErr).WithFields(log.Fields{
+							"tweetID":  taskTweet.ID,
+							"mediaUrl": mediaURL,
+						}).Error("problem getting the encoded mediaData image")
+					} else {
+						mediaData = response
+					}
+				}
+
+				c <- NewsItem{
+					ID:         taskTweet.ID,
+					CreateTime: taskTweet.CreatedAt.Unix(),
+					Text:       storyText,
+					MediaURL:   mediaURL,
+					MediaData:  mediaData,
+					StoryURL:   storyURL}
 			}
+		}(ctx, tweet)
 
-			retval.Items = append(retval.Items, NewsItem{
-				ID:         tweet.ID,
-				CreateTime: tweet.CreatedAt.Unix(),
-				Text:       storyText,
-				MediaURL:   mediaURL,
-				MediaData:  mediaData,
-				StoryURL:   storyURL})
+	}
+
+	//	Gather all the responses...
+loop:
+	for i := 0; i < tweetsWithUrls; i++ {
+		select {
+		case result := <-c:
+			retval.Items = append(retval.Items, result)
+		case <-timeout:
+			log.Error("timed out getting information about tweets")
+			break loop
 		}
-
 	}
 
 	xray.AddMetadata(ctx, "TwitterCNNResult", retval)
