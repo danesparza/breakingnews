@@ -3,6 +3,7 @@ package data_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-xray-sdk-go/xray"
 	"github.com/danesparza/breakingnews/data"
@@ -31,11 +32,11 @@ func TestTwitter_GetNewsReport_ReturnsValidData(t *testing.T) {
 
 	if len(response.Items) > 1 {
 		// 	Make sure that the items are in sorted order
-		previousTime := int64(0)
+		previousTime := time.Now().Unix()
 
 		for _, item := range response.Items {
-			if previousTime > item.CreateTime {
-				t.Errorf("Items not returned in sorted order! %+v has a create date less than %v", item, previousTime)
+			if previousTime < item.CreateTime {
+				t.Errorf("Items not returned in sorted order! %+v has a create date greater than %v", item, previousTime)
 			}
 			previousTime = item.CreateTime
 		}

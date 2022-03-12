@@ -30,7 +30,7 @@ func (n NewsItems) Len() int {
 }
 
 func (n NewsItems) Less(i, j int) bool {
-	return n[i].CreateTime < n[j].CreateTime
+	return n[i].CreateTime > n[j].CreateTime
 }
 
 func (n NewsItems) Swap(i, j int) {
