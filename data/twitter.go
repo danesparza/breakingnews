@@ -10,6 +10,7 @@ import (
 	"image/jpeg"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -121,8 +122,6 @@ func (s TwitterCNNService) GetNewsReport(ctx context.Context) (NewsReport, error
 	for _, tweet := range twResponse.Tweets {
 
 		//	Following example here ... https://go.dev/talks/2012/concurrency.slide#47
-		//	Start embedded goroutine here?  (and have it return a NewsItem?)
-
 		go func(ctxPassed context.Context, taskTweet Tweet) {
 			//	Start the service segment
 			ctxtask, _ := xray.BeginSubsegment(ctxPassed, "tweet-fetchtask")
@@ -183,11 +182,15 @@ loop:
 		}
 	}
 
+	//	Sort the responses
+	sort.Sort(retval.Items)
+
 	xray.AddMetadata(ctx, "TwitterCNNResult", retval)
 
 	// Close the segment
 	seg.Close(nil)
 
+	//	Return the data
 	return retval, nil
 }
 

@@ -8,8 +8,8 @@ import (
 
 // NewsReport defines a news report
 type NewsReport struct {
-	Items   []NewsItem `json:"items"`
-	Version string     `json:"version"`
+	Items   NewsItems `json:"items"`
+	Version string    `json:"version"`
 }
 
 // NewsItem represents a single news item
@@ -20,6 +20,21 @@ type NewsItem struct {
 	MediaURL   string `json:"mediaurl"`
 	MediaData  string `json:"mediadata"`
 	StoryURL   string `json:"storyurl"`
+}
+
+type NewsItems []NewsItem
+
+//	Let NewsItems know how to sort by implementing the sort interface (https://pkg.go.dev/sort#Interface):
+func (n NewsItems) Len() int {
+	return len(n)
+}
+
+func (n NewsItems) Less(i, j int) bool {
+	return n[i].CreateTime < n[j].CreateTime
+}
+
+func (n NewsItems) Swap(i, j int) {
+	n[i], n[j] = n[j], n[i]
 }
 
 // NewsService is the interface for all services that can fetch news data

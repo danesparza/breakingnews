@@ -25,6 +25,23 @@ func TestTwitter_GetNewsReport_ReturnsValidData(t *testing.T) {
 
 	t.Logf("Returned %v items", len(response.Items))
 
+	if len(response.Items) < 1 {
+		t.Errorf("No items returned")
+	}
+
+	if len(response.Items) > 1 {
+		// 	Make sure that the items are in sorted order
+		previousTime := int64(0)
+
+		for _, item := range response.Items {
+			if previousTime > item.CreateTime {
+				t.Errorf("Items not returned in sorted order! %+v has a create date less than %v", item, previousTime)
+			}
+			previousTime = item.CreateTime
+		}
+
+	}
+
 	// t.Logf("Returned object: %+v", response)
 
 }
