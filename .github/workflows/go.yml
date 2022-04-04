@@ -23,3 +23,5 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+      env:
+        TWITTER_V2_BEARER_TOKEN: ${{ secrets.TWITTER_V2_BEARER_TOKEN }}
