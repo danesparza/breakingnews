@@ -20,6 +20,9 @@ jobs:
 
     - name: Build AWS handler
       run: env GOOS=linux go build -ldflags "-X main.BuildVersion=1.0.${{github.run_number}} -X main.CommitID=${{github.sha}}" -o breakingnews main.go
+      
+    - name: Package AWS handler
+      run: zip breakingnews_handler.zip ./breakingnews
 
     - name: Test
       run: go test -v ./...
